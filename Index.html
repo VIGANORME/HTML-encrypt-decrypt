@@ -1,1 +1,1067 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BerryGarden Simulator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --secondary: #8BC34A;
+            --accent: #FF9800;
+            --dark: #2E7D32;
+            --light: #C8E6C9;
+            --background: #F1F8E9;
+            --text: #212121;
+            --error: #F44336;
+            --success: #4CAF50;
+            --rare: #9C27B0;
+            --epic: #FF5722;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23C8E6C9" width="100" height="100"/><path fill="%23A5D6A7" d="M0 0h50v50H0z"/></svg>');
+            background-size: 30px 30px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .berry-count {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            background-color: var(--dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 0 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tab:hover, .tab.active {
+            background-color: var(--dark);
+            transform: translateY(-2px);
+        }
+        
+        .content-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            min-height: 400px;
+        }
+        
+        .garden-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .plot {
+            aspect-ratio: 1;
+            background-color: var(--light);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .plot:hover {
+            transform: scale(1.05);
+        }
+        
+        .plot.empty::before {
+            content: "+";
+            font-size: 2rem;
+            color: var(--dark);
+        }
+        
+        .plot img {
+            max-width: 80%;
+            max-height: 80%;
+            transition: all 0.3s;
+        }
+        
+        .plot-details {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 90%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .seed-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .seed-item {
+            background-color: var(--light);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .seed-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .seed-item.rare {
+            border: 2px solid var(--rare);
+        }
+        
+        .seed-item.epic {
+            border: 2px solid var(--epic);
+        }
+        
+        .seed-price {
+            font-weight: bold;
+            color: var(--dark);
+            margin: 5px 0;
+        }
+        
+        .seed-rarity {
+            font-size: 0.8rem;
+            padding: 2px 5px;
+            border-radius: 10px;
+            background-color: var(--secondary);
+            color: white;
+            margin-top: 5px;
+        }
+        
+        .seed-rarity.rare {
+            background-color: var(--rare);
+        }
+        
+        .seed-rarity.epic {
+            background-color: var(--epic);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .admin-section {
+            display: none;
+        }
+        
+        .admin-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .control-group {
+            background-color: var(--light);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        button:hover {
+            background-color: var(--dark);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .event-active {
+            background-color: var(--accent);
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: var(--success);
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .notification.error {
+            background-color: var(--error);
+        }
+        
+        .upgrade-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .upgrade-button:hover {
+            background-color: #F57C00;
+        }
+        
+        .mutation-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: var(--accent);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .garden-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .admin-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .berry-count {
+                position: relative;
+                margin-top: 10px;
+                justify-content: center;
+            }
+            
+            header {
+                padding-bottom: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-seedling"></i> BerryGarden Simulator</h1>
+        <div class="berry-count" id="berryCount"><i class="fas fa-coins"></i> 100 Berry</div>
+    </header>
+    
+    <div class="tabs">
+        <button class="tab active" data-tab="garden"><i class="fas fa-leaf"></i> Kebun</button>
+        <button class="tab" data-tab="market"><i class="fas fa-store"></i> Pasar</button>
+        <button class="tab" data-tab="inventory"><i class="fas fa-backpack"></i> Inventori</button>
+        <button class="tab" id="adminTab" data-tab="admin" style="display:none;"><i class="fas fa-cogs"></i> Admin</button>
+    </div>
+    
+    <div id="gardenSection" class="content-section">
+        <h2><i class="fas fa-leaf"></i> Kebun Saya</h2>
+        <div class="garden-grid" id="gardenGrid">
+            <!-- Plot kebun akan diisi oleh JavaScript -->
+        </div>
+        <button class="upgrade-button" id="upgradePlotButton"><i class="fas fa-plus"></i> Tambah Lahan (100 Berry)</button>
+    </div>
+    
+    <div id="marketSection" class="content-section" style="display: none;">
+        <h2><i class="fas fa-store"></i> Pasar Benih</h2>
+        <p>Stok benih diperbarui setiap 5 menit</p>
+        <div class="seed-list" id="seedList">
+            <!-- Daftar benih akan diisi oleh JavaScript -->
+        </div>
+    </div>
+    
+    <div id="inventorySection" class="content-section" style="display: none;">
+        <h2><i class="fas fa-backpack"></i> Inventori</h2>
+        <div id="inventoryItems">
+            <!-- Item inventori akan diisi oleh JavaScript -->
+        </div>
+    </div>
+    
+    <div id="adminSection" class="content-section admin-section" style="display: none;">
+        <h2><i class="fas fa-cogs"></i> Panel Admin</h2>
+        <div class="admin-controls">
+            <div class="control-group">
+                <h3>Kontrol Stok Benih</h3>
+                <div id="seedStockControls">
+                    <!-- Kontrol stok benih akan diisi oleh JavaScript -->
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Event Mutasi</h3>
+                <div id="mutationControls">
+                    <!-- Kontrol mutasi akan diisi oleh JavaScript -->
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Event Khusus</h3>
+                <button id="doublePriceEvent"><i class="fas fa-money-bill-wave"></i> Harga Jual 2x</button>
+                <button id="bonusHarvestEvent"><i class="fas fa-gift"></i> Bonus Panen</button>
+                <button id="festivalEvent"><i class="fas fa-music"></i> Festival</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="plantModal">
+        <div class="modal-content">
+            <h2>Pilih Benih untuk Ditanam</h2>
+            <div id="plantSelection">
+                <!-- Opsi benih akan diisi oleh JavaScript -->
+            </div>
+            <button onclick="closeModal('plantModal')"><i class="fas fa-times"></i> Tutup</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="harvestModal">
+        <div class="modal-content">
+            <h2>Panen Berhasil!</h2>
+            <p id="harvestDetails"></p>
+            <button onclick="closeModal('harvestModal')"><i class="fas fa-check"></i> OK</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="adminLoginModal">
+        <div class="modal-content">
+            <h2>Login Admin</h2>
+            <input type="password" id="adminPassword" placeholder="Masukkan kode admin">
+            <button onclick="checkAdminPassword()"><i class="fas fa-sign-in-alt"></i> Masuk</button>
+            <button onclick="closeModal('adminLoginModal')"><i class="fas fa-times"></i> Batal</button>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
 
+    <script>
+        // Data Game
+        let gameData = {
+            berries: 100,
+            inventory: {},
+            gardenPlots: Array(6).fill().map(() => ({ planted: false })),
+            seedStock: [],
+            lastSeedRefresh: Date.now(),
+            mutations: {
+                lava: false,
+                wind: false,
+                water: false,
+                earthquake: false,
+                drought: false
+            },
+            events: {
+                doublePrice: false,
+                bonusHarvest: false,
+                festival: false
+            },
+            adminMode: false,
+            maxPlots: 6
+        };
+        
+        // Data Tanaman
+        const plantData = {
+            carrot: { name: "Wortel", price: 10, growthTime: 60000, value: 20, rarity: "common", icon: "🥕" },
+            tomato: { name: "Tomat", price: 15, growthTime: 120000, value: 30, rarity: "common", icon: "🍅" },
+            strawberry: { name: "Stroberi", price: 20, growthTime: 180000, value: 40, rarity: "common", icon: "🍓" },
+            cabbage: { name: "Kubis", price: 25, growthTime: 240000, value: 50, rarity: "common", icon: "🥬" },
+            potato: { name: "Kentang", price: 30, growthTime: 300000, value: 60, rarity: "common", icon: "🥔" },
+            corn: { name: "Jagung", price: 35, growthTime: 360000, value: 70, rarity: "common", icon: "🌽" },
+            blueberry: { name: "Bluberi", price: 100, growthTime: 420000, value: 200, rarity: "rare", icon: "🫐" },
+            watermelon: { name: "Semangka", price: 150, growthTime: 480000, value: 300, rarity: "rare", icon: "🍉" },
+            dragonfruit: { name: "Buah Naga", price: 200, growthTime: 540000, value: 500, rarity: "epic", icon: "🐉" },
+            pineapple: { name: "Nanas", price: 250, growthTime: 600000, value: 600, rarity: "epic", icon: "🍍" }
+        };
+        
+        // Mutasi dan pengaruhnya
+        const mutationEffects = {
+            lava: { name: "Lava", multiplier: 3, color: "#FF5722", icon: "🌋" },
+            wind: { name: "Angin", multiplier: 2, color: "#03A9F4", icon: "💨" },
+            water: { name: "Air", multiplier: 2, color: "#2196F3", icon: "💧" },
+            earthquake: { name: "Gempa", multiplier: 4, color: "#795548", icon: "🌍" },
+            drought: { name: "Kekeringan", multiplier: 3, color: "#FFEB3B", icon: "☀️" }
+        };
+        
+        // Inisialisasi Game
+        function initGame() {
+            loadGameData();
+            setupGarden();
+            generateSeedStock();
+            updateBerryDisplay();
+            setupTabs();
+            startGrowthCheck();
+            
+            // Setup event listener untuk upgrade plot
+            document.getElementById('upgradePlotButton').addEventListener('click', upgradeGardenPlot);
+        }
+        
+        // Load data dari localStorage
+        function loadGameData() {
+            const savedData = localStorage.getItem('berryGardenData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                // Jika waktu refresh seed stock sudah lewat 5 menit, generate baru
+                if (Date.now() - parsedData.lastSeedRefresh > 300000) {
+                    parsedData.seedStock = generateSeedStockData();
+                    parsedData.lastSeedRefresh = Date.now();
+                }
+                gameData = { ...gameData, ...parsedData };
+            }
+        }
+        
+        // Save data ke localStorage
+        function saveGameData() {
+            localStorage.setItem('berryGardenData', JSON.stringify(gameData));
+        }
+        
+        // Setup tab navigation
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.getAttribute('data-tab');
+                    
+                    // Handle admin tab khusus
+                    if (tabName === 'admin') {
+                        if (gameData.adminMode) {
+                            showSection('admin');
+                        } else {
+                            showModal('adminLoginModal');
+                        }
+                        return;
+                    }
+                    
+                    // Non-admin tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    document.querySelectorAll('.content-section').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    
+                    document.getElementById(tabName + 'Section').style.display = 'block';
+                    
+                    // Refresh display jika perlu
+                    if (tabName === 'market') {
+                        updateSeedStockDisplay();
+                    } else if (tabName === 'inventory') {
+                        updateInventoryDisplay();
+                    }
+                });
+            });
+        }
+        
+        // Tampilkan section tertentu
+        function showSection(sectionName) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionName + 'Section').style.display = 'block';
+            
+            // Update tab aktif
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-tab') === sectionName) {
+                    tab.classList.add('active');
+                }
+            });
+        }
+        
+        // Setup kebun
+        function setupGarden() {
+            const gardenGrid = document.getElementById('gardenGrid');
+            gardenGrid.innerHTML = '';
+            
+            gameData.gardenPlots.forEach((plot, index) => {
+                const plotElement = document.createElement('div');
+                plotElement.className = 'plot';
+                plotElement.setAttribute('data-plot-id', index);
+                
+                if (plot.planted) {
+                    if (plot.ready) {
+                        plotElement.innerHTML = `
+                            <div style="font-size: 3rem;">${plantData[plot.plant].icon}</div>
+                            <p>${plantData[plot.plant].name}</p>
+                            <div class="plot-details">Siap panen!</div>
+                        `;
+                        plotElement.style.border = `3px solid ${mutationEffects[plot.mutation]?.color || '#4CAF50'}`;
+                        plotElement.onclick = () => harvestPlant(index);
+                        
+                        // Tampilkan badge mutasi jika ada
+                        if (plot.mutation) {
+                            const mutationBadge = document.createElement('div');
+                            mutationBadge.className = 'mutation-badge';
+                            mutationBadge.innerHTML = `${mutationEffects[plot.mutation].icon} ${mutationEffects[plot.mutation].name}`;
+                            mutationBadge.style.backgroundColor = mutationEffects[plot.mutation].color;
+                            plotElement.appendChild(mutationBadge);
+                        }
+                    } else {
+                        const progress = Math.min(100, ((Date.now() - plot.plantTime) / plot.growthTime) * 100);
+                        plotElement.innerHTML = `
+                            <div style="font-size: 3rem;">${plantData[plot.plant].icon}</div>
+                            <p>${plantData[plot.plant].name}</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                            <div class="plot-details">Tumbuh...</div>
+                        `;
+                        plotElement.onclick = null;
+                    }
+                } else {
+                    plotElement.className += ' empty';
+                    plotElement.onclick = () => openPlantModal(index);
+                }
+                
+                gardenGrid.appendChild(plotElement);
+            });
+            
+            // Update tombol upgrade plot
+            const upgradeButton = document.getElementById('upgradePlotButton');
+            if (gameData.maxPlots >= 15) {
+                upgradeButton.textContent = "Sudah mencapai maksimal lahan";
+                upgradeButton.disabled = true;
+            } else {
+                upgradeButton.innerHTML = `<i class="fas fa-plus"></i> Tambah Lahan (${getNextPlotPrice()} Berry)`;
+                upgradeButton.disabled = gameData.berries < getNextPlotPrice();
+            }
+        }
+        
+        // Generate stok benih acak (10 benih berbeda)
+        function generateSeedStockData() {
+            const plants = Object.keys(plantData);
+            const selectedPlants = [];
+            
+            // Pastikan kita memilih 10 tanaman yang berbeda
+            while (selectedPlants.length < 10 && selectedPlants.length < plants.length) {
+                const randomIndex = Math.floor(Math.random() * plants.length);
+                const plant = plants[randomIndex];
+                
+                if (!selectedPlants.includes(plant)) {
+                    selectedPlants.push(plant);
+                }
+            }
+            
+            // Jika masih kurang dari 10, isi dengan tanaman random (bisa ada duplikat)
+            while (selectedPlants.length < 10) {
+                const randomIndex = Math.floor(Math.random() * plants.length);
+                selectedPlants.push(plants[randomIndex]);
+            }
+            
+            return selectedPlants;
+        }
+        
+        function generateSeedStock() {
+            gameData.seedStock = generateSeedStockData();
+            gameData.lastSeedRefresh = Date.now();
+            saveGameData();
+            updateSeedStockDisplay();
+        }
+        
+        // Update tampilan stok benih
+        function updateSeedStockDisplay() {
+            const seedList = document.getElementById('seedList');
+            seedList.innerHTML = '';
+            
+            gameData.seedStock.forEach(plant => {
+                const seedItem = document.createElement('div');
+                seedItem.className = `seed-item ${plantData[plant].rarity !== 'common' ? plantData[plant].rarity : ''}`;
+                seedItem.innerHTML = `
+                    <div style="font-size: 2rem;">${plantData[plant].icon}</div>
+                    <h3>${plantData[plant].name}</h3>
+                    <p class="seed-price">${plantData[plant].price} Berry</p>
+                    <div class="seed-rarity ${plantData[plant].rarity}">${plantData[plant].rarity}</div>
+                    <button onclick="buySeed('${plant}')"><i class="fas fa-shopping-cart"></i> Beli</button>
+                `;
+                seedList.appendChild(seedItem);
+            });
+            
+            // Tampilkan waktu refresh berikutnya
+            const nextRefresh = new Date(gameData.lastSeedRefresh + 300000);
+            const refreshInfo = document.createElement('div');
+            refreshInfo.style.gridColumn = "1 / -1";
+            refreshInfo.style.textAlign = "center";
+            refreshInfo.style.padding = "10px";
+            refreshInfo.innerHTML = `<p><i class="fas fa-sync"></i> Stok berikutnya: ${nextRefresh.toLocaleTimeString()}</p>`;
+            seedList.appendChild(refreshInfo);
+        }
+        
+        // Beli benih
+        function buySeed(plant) {
+            const price = plantData[plant].price;
+            
+            if (gameData.berries >= price) {
+                gameData.berries -= price;
+                
+                if (!gameData.inventory[plant]) {
+                    gameData.inventory[plant] = 0;
+                }
+                gameData.inventory[plant]++;
+                
+                updateBerryDisplay();
+                updateInventoryDisplay();
+                saveGameData();
+                showNotification(`Berhasil membeli benih ${plantData[plant].name}`);
+            } else {
+                showNotification('Berry tidak cukup!', 'error');
+            }
+        }
+        
+        // Buka modal tanam
+        function openPlantModal(plotId) {
+            const plantSelection = document.getElementById('plantSelection');
+            plantSelection.innerHTML = '';
+            
+            let hasSeeds = false;
+            
+            for (const plant in gameData.inventory) {
+                if (gameData.inventory[plant] > 0) {
+                    hasSeeds = true;
+                    const button = document.createElement('button');
+                    button.innerHTML = `
+                        <span style="font-size: 1.5rem;">${plantData[plant].icon}</span>
+                        ${plantData[plant].name} (Tersedia: ${gameData.inventory[plant]})
+                    `;
+                    button.onclick = () => plantSeed(plotId, plant);
+                    plantSelection.appendChild(button);
+                }
+            }
+            
+            if (!hasSeeds) {
+                plantSelection.innerHTML = '<p>Anda tidak memiliki benih. Beli dulu di Pasar!</p>';
+            }
+            
+            showModal('plantModal');
+        }
+        
+        // Tanam benih
+        function plantSeed(plotId, plant) {
+            if (gameData.inventory[plant] > 0) {
+                gameData.inventory[plant]--;
+                
+                // Tentukan mutasi acak berdasarkan event aktif
+                let mutation = null;
+                const activeMutations = Object.keys(gameData.mutations).filter(m => gameData.mutations[m]);
+                if (activeMutations.length > 0 && Math.random() < 0.3) {
+                    mutation = activeMutations[Math.floor(Math.random() * activeMutations.length)];
+                }
+                
+                gameData.gardenPlots[plotId] = {
+                    planted: true,
+                    plant: plant,
+                    plantTime: Date.now(),
+                    growthTime: plantData[plant].growthTime,
+                    ready: false,
+                    mutation: mutation
+                };
+                
+                closeModal('plantModal');
+                setupGarden();
+                updateInventoryDisplay();
+                saveGameData();
+                showNotification(`Berhasil menanam ${plantData[plant].name}`);
+            }
+        }
+        
+        // Panen tanaman
+        function harvestPlant(plotId) {
+            const plot = gameData.gardenPlots[plotId];
+            const plant = plot.plant;
+            let value = plantData[plant].value;
+            
+            // Terapkan efek mutasi
+            if (plot.mutation) {
+                value = Math.floor(value * mutationEffects[plot.mutation].multiplier);
+            }
+            
+            // Terapkan event khusus
+            if (gameData.events.doublePrice) {
+                value *= 2;
+            }
+            if (gameData.events.bonusHarvest && Math.random() < 0.5) {
+                value += Math.floor(value * 0.5); // Bonus 50%
+            }
+            
+            gameData.berries += value;
+            gameData.gardenPlots[plotId] = { planted: false };
+            
+            updateBerryDisplay();
+            setupGarden();
+            saveGameData();
+            
+            // Tampilkan detail panen
+            const harvestDetails = document.getElementById('harvestDetails');
+            let detailsText = `Anda memanen ${plantData[plant].name} dan mendapatkan ${value} Berry!`;
+            
+            if (plot.mutation) {
+                detailsText += `<br>Mutasi ${mutationEffects[plot.mutation].name} meningkatkan nilai panen!`;
+            }
+            
+            if (gameData.events.doublePrice) {
+                detailsText += `<br>Event harga double aktif!`;
+            }
+            
+            harvestDetails.innerHTML = detailsText;
+            showModal('harvestModal');
+        }
+        
+        // Upgrade garden plot (tambah lahan)
+        function upgradeGardenPlot() {
+            const plotPrice = getNextPlotPrice();
+            
+            if (gameData.berries >= plotPrice) {
+                gameData.berries -= plotPrice;
+                gameData.maxPlots++;
+                gameData.gardenPlots.push({ planted: false });
+                
+                updateBerryDisplay();
+                setupGarden();
+                saveGameData();
+                showNotification("Lahan berhasil ditambah!");
+            } else {
+                showNotification('Berry tidak cukup!', 'error');
+            }
+        }
+        
+        // Dapatkan harga untuk lahan berikutnya
+        function getNextPlotPrice() {
+            // Harga meningkat: 100, 150, 225, 340, 510,...
+            return 100 * Math.pow(1.5, gameData.maxPlots - 6);
+        }
+        
+        // Update tampilan berry
+        function updateBerryDisplay() {
+            document.getElementById('berryCount').innerHTML = `<i class="fas fa-coins"></i> ${gameData.berries} Berry`;
+        }
+        
+        // Update tampilan inventori
+        function updateInventoryDisplay() {
+            const inventoryItems = document.getElementById('inventoryItems');
+            inventoryItems.innerHTML = '';
+            
+            let hasItems = false;
+            
+            for (const plant in gameData.inventory) {
+                if (gameData.inventory[plant] > 0) {
+                    hasItems = true;
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'seed-item';
+                    itemElement.innerHTML = `
+                        <div style="font-size: 2rem;">${plantData[plant].icon}</div>
+                        <h3>${plantData[plant].name}</h3>
+                        <p>Jumlah: ${gameData.inventory[plant]}</p>
+                    `;
+                    inventoryItems.appendChild(itemElement);
+                }
+            }
+            
+            if (!hasItems) {
+                inventoryItems.innerHTML = '<p>Inventori kosong. Beli benih di Pasar!</p>';
+            }
+        }
+        
+        // Periksa pertumbuhan tanaman secara berkala
+        function startGrowthCheck() {
+            setInterval(() => {
+                let needsUpdate = false;
+                
+                gameData.gardenPlots.forEach((plot, index) => {
+                    if (plot.planted && !plot.ready) {
+                        const growthProgress = Date.now() - plot.plantTime;
+                        if (growthProgress >= plot.growthTime) {
+                            gameData.gardenPlots[index].ready = true;
+                            needsUpdate = true;
+                            showNotification(`${plantData[plot.plant].name} siap dipanen!`);
+                        }
+                    }
+                });
+                
+                // Periksa apakah perlu refresh stok benih (setiap 5 menit)
+                if (Date.now() - gameData.lastSeedRefresh > 300000) {
+                    generateSeedStock();
+                }
+                
+                if (needsUpdate) {
+                    setupGarden();
+                    saveGameData();
+                }
+                
+                // Update progress bar secara real-time
+                updateProgressBars();
+            }, 1000);
+        }
+        
+        // Update progress bar secara real-time
+        function updateProgressBars() {
+            gameData.gardenPlots.forEach((plot, index) => {
+                if (plot.planted && !plot.ready) {
+                    const progress = Math.min(100, ((Date.now() - plot.plantTime) / plot.growthTime) * 100);
+                    const progressFill = document.querySelector(`.plot[data-plot-id="${index}"] .progress-fill`);
+                    if (progressFill) {
+                        progressFill.style.width = `${progress}%`;
+                    }
+                }
+            });
+        }
+        
+        // Tampilkan modal
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        // Tutup modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Tampilkan notifikasi
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type === 'error' ? 'error' : ''}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Fungsi Admin
+        function checkAdminPassword() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === 'GROWADMIN') {
+                gameData.adminMode = true;
+                document.getElementById('adminTab').style.display = 'block';
+                closeModal('adminLoginModal');
+                showSection('admin');
+                initAdminPanel();
+                showNotification('Mode admin diaktifkan');
+            } else {
+                showNotification('Kode admin salah!', 'error');
+            }
+        }
+        
+        // Inisialisasi panel admin
+        function initAdminPanel() {
+            // Setup kontrol stok benih
+            const seedStockControls = document.getElementById('seedStockControls');
+            seedStockControls.innerHTML = '';
+            
+            for (const plant in plantData) {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `stock-${plant}`;
+                checkbox.checked = gameData.seedStock.includes(plant);
+                checkbox.addEventListener('change', () => toggleSeedStock(plant, checkbox.checked));
+                
+                const label = document.createElement('label');
+                label.htmlFor = `stock-${plant}`;
+                label.innerHTML = `${plantData[plant].icon} ${plantData[plant].name}`;
+                
+                seedStockControls.appendChild(checkbox);
+                seedStockControls.appendChild(label);
+                seedStockControls.appendChild(document.createElement('br'));
+            }
+            
+            // Setup kontrol mutasi
+            const mutationControls = document.getElementById('mutationControls');
+            mutationControls.innerHTML = '';
+            
+            for (const mutation in gameData.mutations) {
+                const button = document.createElement('button');
+                button.id = `mutation-${mutation}`;
+                button.innerHTML = `${mutationEffects[mutation].icon} ${mutationEffects[mutation].name}`;
+                if (gameData.mutations[mutation]) {
+                    button.classList.add('event-active');
+                }
+                button.addEventListener('click', () => toggleMutation(mutation));
+                mutationControls.appendChild(button);
+            }
+            
+            // Setup event khusus
+            document.getElementById('doublePriceEvent').addEventListener('click', () => toggleEvent('doublePrice'));
+            document.getElementById('bonusHarvestEvent').addEventListener('click', () => toggleEvent('bonusHarvest'));
+            document.getElementById('festivalEvent').addEventListener('click', () => toggleEvent('festival'));
+        }
+        
+        // Toggle stok benih (admin)
+        function toggleSeedStock(plant, enabled) {
+            if (enabled && !gameData.seedStock.includes(plant)) {
+                gameData.seedStock.push(plant);
+            } else if (!enabled && gameData.seedStock.includes(plant)) {
+                gameData.seedStock = gameData.seedStock.filter(p => p !== plant);
+            }
+            
+            // Pastikan tetap 10 benih
+            if (gameData.seedStock.length > 10) {
+                gameData.seedStock = gameData.seedStock.slice(0, 10);
+            } else if (gameData.seedStock.length < 10) {
+                // Tambahkan benih acak jika kurang dari 10
+                const allPlants = Object.keys(plantData);
+                while (gameData.seedStock.length < 10 && gameData.seedStock.length < allPlants.length) {
+                    const randomPlant = allPlants[Math.floor(Math.random() * allPlants.length)];
+                    if (!gameData.seedStock.includes(randomPlant)) {
+                        gameData.seedStock.push(randomPlant);
+                    }
+                }
+            }
+            
+            saveGameData();
+            updateSeedStockDisplay();
+        }
+        
+        // Toggle mutasi (admin)
+        function toggleMutation(mutation) {
+            gameData.mutations[mutation] = !gameData.mutations[mutation];
+            const button = document.getElementById(`mutation-${mutation}`);
+            
+            if (gameData.mutations[mutation]) {
+                button.classList.add('event-active');
+                showNotification(`Event mutasi ${mutationEffects[mutation].name} diaktifkan`);
+            } else {
+                button.classList.remove('event-active');
+                showNotification(`Event mutasi ${mutationEffects[mutation].name} dimatikan`);
+            }
+            
+            saveGameData();
+        }
+        
+        // Toggle event khusus (admin)
+        function toggleEvent(event) {
+            gameData.events[event] = !gameData.events[event];
+            const button = document.getElementById(`${event}Event`);
+            
+            if (gameData.events[event]) {
+                button.classList.add('event-active');
+                showNotification(`Event ${event} diaktifkan`);
+            } else {
+                button.classList.remove('event-active');
+                showNotification(`Event ${event} dimatikan`);
+            }
+            
+            saveGameData();
+        }
+        
+        // Inisialisasi game saat halaman dimuat
+        window.onload = initGame;
+    </script>
+</body>
+</html>
